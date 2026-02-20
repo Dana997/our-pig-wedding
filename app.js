@@ -621,7 +621,15 @@ function buildSideMenu(){
 
   el.innerHTML = "";
 
-  for(const c of CATEGORIES){
+  const fixedCategories = [
+    { id: "hall", name: "웨딩홀" },
+    { id: "sde", name: "스드메 + 예복" },
+    { id: "family", name: "양가준비" },
+    { id: "honeymoon", name: "신혼여행" },
+    { id: "home", name: "우리집" }
+  ];
+
+  for(const c of fixedCategories){
     const b = document.createElement("button");
     b.className = "btn";
     b.type = "button";
