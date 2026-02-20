@@ -428,3 +428,42 @@ body{ background: var(--bg2) !important; }
   backdrop-filter: blur(10px);
 }
 .container{flex:1; padding:16px;}
+
+/* ===== FORCE LEFT SIDEBAR (override) ===== */
+.layout{
+  display:flex !important;
+  min-height:100vh !important;
+  flex-direction:row !important;
+}
+
+.sidebar{
+  width:260px !important;
+  flex:0 0 260px !important;
+  position:sticky !important;
+  top:0 !important;
+  height:100vh !important;
+  overflow:auto !important;
+  border-right:1px solid var(--line) !important;
+  z-index:100 !important;
+}
+
+.container{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+}
+
+/* 대시보드용 dash-side(예전꺼) 남아있으면 숨김 */
+.dash-side{ display:none !important; }
+
+/* 모바일에서만 위로 올라오게(원하면 유지) */
+@media (max-width: 768px){
+  .layout{ flex-direction:column !important; }
+  .sidebar{
+    width:auto !important;
+    flex: none !important;
+    height:auto !important;
+    position:static !important;
+    border-right:none !important;
+    border-bottom:1px solid var(--line) !important;
+  }
+}
