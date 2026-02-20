@@ -1,7 +1,6 @@
 // app.js — Our Pig Wedding v1 (localStorage)
 // - Summary + Categories + Vendors + Costs + Dates (upcoming + calendar)
 // - Export/Import JSON
-// - Tabs use event delegation (fixes "category tabs not clickable" issues)
 
 const CATEGORIES = [
   { id: "hall", name: "웨딩홀" },
@@ -102,7 +101,6 @@ function saveState() {
 }
 
 // ---- DOM ----
-const $tabs = document.getElementById("tabs") || document.querySelector("nav.tabs");
 const $viewSummary = document.getElementById("view-summary");
 const $viewCategory = document.getElementById("view-category");
 
@@ -141,54 +139,11 @@ function getCategory(catId) {
   return state.categories[catId];
 }
 
-// ---- Tabs (Event Delegation) ----
-function buildTabs() {
-  if (!$tabs) return;
-
-  $tabs.innerHTML = "";
-
-  const makeBtn = (text, dataset) => {
-    const b = document.createElement("button");
-    b.className = "tab";
-    b.type = "button"; // prevents weird submit behaviors
-    b.textContent = text;
-    Object.assign(b.dataset, dataset);
-    return b;
-  };
-
-  $tabs.appendChild(makeBtn("Summary", { view: "summary" }));
-
-  for (const c of CATEGORIES) {
-    $tabs.appendChild(makeBtn(c.name, { view: "category", catId: c.id }));
-  }
-
-  // One click handler for all tabs
-  $tabs.onclick = (e) => {
-    const btn = e.target.closest("button.tab");
-    if (!btn) return;
-
-    const view = btn.dataset.view;
-    const catId = btn.dataset.catId || null;
-
-    if (view === "summary") setActiveView("summary");
-    else setActiveView("category", catId);
-  };
-}
-
 function setActiveView(view, catId = null) {
   active = { view, catId };
 
   if ($viewSummary) $viewSummary.classList.toggle("active", view === "summary");
   if ($viewCategory) $viewCategory.classList.toggle("active", view === "category");
-
-  // Highlight active tab
-  if ($tabs) {
-    [...$tabs.querySelectorAll(".tab")].forEach((btn) => {
-      const isSummary = btn.dataset.view === "summary";
-      const isCat = btn.dataset.view === "category" && btn.dataset.catId === catId;
-      btn.classList.toggle("active", (view === "summary" && isSummary) || (view === "category" && isCat));
-    });
-  }
 
   render();
 }
@@ -351,7 +306,6 @@ function renderCalendar() {
     if (e.isFinal) obj.finalCount += 1;
   }
 
-  // leading blanks
   for (let i = 0; i < startDay; i++) {
     const cell = document.createElement("div");
     cell.className = "cal-cell mutedCell";
@@ -441,7 +395,6 @@ function renderCategory(catId) {
       $total.textContent = money(v.deposit + v.balance);
       saveState();
 
-      // Keep Summary up to date
       renderSummary();
     };
 
@@ -469,11 +422,10 @@ function renderCategory(catId) {
       }
     };
 
-    // Events
     $radio.onchange = () => {
       cat.finalVendorId = v.id;
       saveState();
-      render(); // refresh badge + summary
+      render();
     };
 
     $name.oninput = () => { v.name = $name.value; saveState(); renderSummary(); };
@@ -515,7 +467,6 @@ if ($btnAddVendor) {
     if (!active.catId) return;
 
     const cat = getCategory(active.catId);
-    // Add to TOP so it doesn't feel like it's "at the bottom"
     cat.vendors.unshift(
       normalizeVendor({
         id: uid(),
@@ -533,8 +484,6 @@ if ($btnAddVendor) {
 
     saveState();
     render();
-
-    // Scroll to top so user sees the new card right away
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 }
@@ -566,7 +515,6 @@ if ($importFile) {
       const text = await file.text();
       const imported = JSON.parse(text);
 
-      // Build safe state
       const base = defaultState();
       base.meta.title = imported?.meta?.title || base.meta.title;
       base.summaryMemo = imported?.summaryMemo || "";
@@ -591,7 +539,6 @@ if ($importFile) {
   };
 }
 
-// Calendar nav
 if ($calPrev) {
   $calPrev.onclick = () => {
     calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1);
@@ -615,6 +562,7 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
+// ---- Side Menu ----
 function buildSideMenu(){
   const el = document.getElementById("sideMenu");
   if(!el) return;
@@ -622,16 +570,17 @@ function buildSideMenu(){
   el.innerHTML = "";
 
   const home = document.createElement("button");
-home.className = "btn primary";
-home.type = "button";
-home.textContent = "MAIN";
-home.onclick = () => setActiveView("summary");
-el.appendChild(home);
+  home.className = "btn primary";
+  home.type = "button";
+  home.textContent = "MAIN";
+  home.onclick = () => setActiveView("summary");
+  el.appendChild(home);
 
+  // ✅ IDs MUST match CATEGORIES
   const fixedCategories = [
     { id: "hall", name: "웨딩홀" },
     { id: "sde", name: "스드메 + 예복" },
-    { id: "family", name: "양가준비" },
+    { id: "parents", name: "양가준비" },
     { id: "honeymoon", name: "신혼여행" },
     { id: "home", name: "우리집" }
   ];
@@ -646,7 +595,31 @@ el.appendChild(home);
   }
 }
 
-
 buildSideMenu();
 setActiveView("summary");
 render();
+
+// ===== Mobile sidebar toggle =====
+(() => {
+  const openBtn = document.getElementById("btnSidebarOpen");
+  const closeBtn = document.getElementById("btnSidebarClose");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  const sideMenu = document.getElementById("sideMenu");
+
+  const open = () => document.body.classList.add("sidebar-open");
+  const close = () => document.body.classList.remove("sidebar-open");
+
+  openBtn?.addEventListener("click", open);
+  closeBtn?.addEventListener("click", close);
+  backdrop?.addEventListener("click", close);
+
+  sideMenu?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    if (window.matchMedia("(max-width: 768px)").matches) close();
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+})();
