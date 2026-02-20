@@ -621,6 +621,13 @@ function buildSideMenu(){
 
   el.innerHTML = "";
 
+  const home = document.createElement("button");
+home.className = "btn primary";
+home.type = "button";
+home.textContent = "메인";
+home.onclick = () => setActiveView("summary");
+el.appendChild(home);
+
   const fixedCategories = [
     { id: "hall", name: "웨딩홀" },
     { id: "sde", name: "스드메 + 예복" },
