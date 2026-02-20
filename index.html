@@ -8,6 +8,32 @@
 </head>
 <body>
 <body>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1 id="siteTitle">우리 결혼 준비 아지트</h1>
+        <p class="sub">Summary에서 최종업체 비용 합산 & 일정이 자동 정리돼요</p>
+      </div>
+
+      <div class="side-menu" id="sideMenu"></div>
+    </aside>
+
+    <main class="container">
+      <!-- ✅ 여기 안에 view-summary / view-category 두 섹션이 둘 다 들어있어야 함 -->
+      <section id="view-summary" class="view active">
+        <!-- Summary 대시보드 내용(hero/list/cal/cost/memo 등) -->
+      </section>
+
+      <section id="view-category" class="view">
+        <!-- 카테고리 화면 내용 -->
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js?v=1"></script>
+</body>
+</html>
   <header class="topbar">
   <div class="brand">
     <h1 id="siteTitle">우리 결혼 준비 아지트</h1>
@@ -21,10 +47,7 @@
     <section id="view-summary" class="view active">
   <div class="dashboard">
 
-    <!-- 좌측 메뉴 박스 -->
-    <div class="card dash-side">
-      <div class="side-menu" id="sideMenu"></div>
-    </div>
+  
 
     <!-- 상단 큰 설명 -->
     <div class="card dash-hero">
