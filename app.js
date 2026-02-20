@@ -624,7 +624,7 @@ function buildSideMenu(){
   const home = document.createElement("button");
 home.className = "btn primary";
 home.type = "button";
-home.textContent = "메인";
+home.textContent = "MAIN";
 home.onclick = () => setActiveView("summary");
 el.appendChild(home);
 
