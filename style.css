@@ -43,3 +43,33 @@
   .sidebar{width:auto; position:static; border-right:none; border-bottom:1px solid var(--line);}
   .tabs.vertical{flex-direction:row; flex-wrap:wrap;}
 }
+
+/* --- CLICK FIX: 카테고리 탭이 안 눌릴 때(투명 레이어/겹침 방지) --- */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 9999;              /* 헤더를 최상단으로 */
+}
+
+.tabs{
+  position: relative;
+  z-index: 10000;             /* 탭 영역을 더 위로 */
+  pointer-events: auto;
+}
+
+.tab{
+  pointer-events: auto !important;
+}
+
+/* 혹시 상단 브랜드 영역이 탭 위로 덮는 경우 대비 */
+.brand{
+  pointer-events: none;
+}
+.brand *{
+  pointer-events: none;
+}
+
+/* 탭만은 클릭 가능하게 다시 살림 */
+#tabs, #tabs *{
+  pointer-events: auto !important;
+}
