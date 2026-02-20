@@ -73,3 +73,11 @@
 #tabs, #tabs *{
   pointer-events: auto !important;
 }
+
+/* ===== Single-view routing: active view만 보이게 ===== */
+.view { display: none !important; }
+.view.active { display: block !important; }
+
+/* 혹시 섹션에 class="view"가 없으면 대비용 (id 기반) */
+#view-summary, #view-category { display: none; }
+#view-summary.active, #view-category.active { display: block; }
