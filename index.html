@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>우리 결혼 준비 아지트</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1 id="siteTitle">우리 결혼 준비 아지트</h1>
+      <p class="sub">Summary에서 최종업체 & 비용 & 일정이 자동 집계돼요</p>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+
+  <main class="container">
+    <!-- SUMMARY -->
+    <section id="view-summary" class="view active">
+      <div class="card">
+        <div class="card-head">
+          <h2>Summary</h2>
+          <div class="row gap">
+            <button class="btn" id="btnExport">내보내기(JSON)</button>
+            <label class="btn ghost">
+              가져오기(JSON)
+              <input id="importFile" type="file" accept="application/json" hidden />
+            </label>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="kpi"><div class="kpi-label">총 예산</div><div class="kpi-value" id="kpiBudget">0</div></div>
+          <div class="kpi"><div class="kpi-label">총 계약금</div><div class="kpi-value" id="kpiDeposit">0</div></div>
+          <div class="kpi"><div class="kpi-label">총 잔금</div><div class="kpi-value" id="kpiBalance">0</div></div>
+          <div class="kpi"><div class="kpi-label">총액(계약금+잔금)</div><div class="kpi-value" id="kpiTotal">0</div></div>
+        </div>
+
+        <h3 class="mt">메뉴별 최종업체</h3>
+        <div id="finalList" class="final-list"></div>
+
+        <h3 class="mt">다가오는 일정</h3>
+        <div id="upcomingList" class="final-list"></div>
+      </div>
+
+      <div class="card mt">
+        <div class="row between">
+          <h3>달력</h3>
+          <div class="row gap">
+            <button class="btn ghost" id="calPrev">◀</button>
+            <div class="muted" id="calLabel"></div>
+            <button class="btn ghost" id="calNext">▶</button>
+          </div>
+        </div>
+        <div id="calendar" class="calendar mt-sm"></div>
+        <p class="muted mt-sm">※ 날짜가 있는 항목만 달력/다가오는 일정에 표시돼요.</p>
+      </div>
+
+      <div class="card mt">
+        <h3>Summary 메모</h3>
+        <textarea id="summaryMemo" class="textarea" placeholder="요약 메모(예: 이번 주 웨딩홀 2군데 투어, 스드메 상담 예약…)"></textarea>
+        <div class="row end mt-sm">
+          <button class="btn" id="btnSaveSummaryMemo">저장</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORY VIEW -->
+    <section id="view-category" class="view">
+      <div class="row between">
+        <h2 id="catTitle">카테고리</h2>
+        <button class="btn" id="btnAddVendor">후보 추가</button>
+      </div>
+      <div id="vendorList" class="vendor-list mt"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>Made by us · 저장은 이 브라우저(localStorage)에 됩니다.</small>
+  </footer>
+
+  <template id="vendorCardTpl">
+    <article class="card vendor-card">
+      <div class="row between">
+        <div class="row gap" style="flex:1; min-width:0;">
+          <input class="radioFinal" type="radio" name="finalPick" />
+          <span class="badge">최종</span>
+          <input class="input vendorName" placeholder="업체/후보 이름 (예: OO웨딩홀)" />
+        </div>
+        <button class="btn danger btnDel">삭제</button>
+      </div>
+
+      <div class="grid2 mt-sm">
+        <div>
+          <label class="label">인스타/링크</label>
+          <input class="input vendorLink" placeholder="https://instagram.com/..." />
+        </div>
+        <div>
+          <label class="label">사진 URL</label>
+          <input class="input vendorPhoto" placeholder="이미지 주소(선택)" />
+        </div>
+      </div>
+
+      <div class="grid2 mt-sm">
+        <div>
+          <label class="label">날짜</label>
+          <input class="input vendorDate" type="date" />
+          <div class="muted mt-sm">예: 투어/상담/계약/촬영/납부일</div>
+        </div>
+        <div>
+          <label class="label">일정 제목(선택)</label>
+          <input class="input vendorDateTitle" placeholder="예: 웨딩홀 투어 / 계약금 납부" />
+        </div>
+      </div>
+
+      <div class="mt-sm">
+        <label class="label">정보/메모</label>
+        <textarea class="textarea vendorMemo" placeholder="견적, 포함사항, 장단점, 상담 느낌 등"></textarea>
+      </div>
+
+      <div class="mt">
+        <h4>비용</h4>
+        <div class="grid3 mt-sm">
+          <div><label class="label">예산</label><input class="input money vendorBudget" inputmode="numeric" placeholder="예: 5000000" /></div>
+          <div><label class="label">계약금</label><input class="input money vendorDeposit" inputmode="numeric" placeholder="예: 1000000" /></div>
+          <div><label class="label">잔금</label><input class="input money vendorBalance" inputmode="numeric" placeholder="예: 4000000" /></div>
+        </div>
+      </div>
+
+      <div class="row between mt">
+        <a class="linkOpen" target="_blank" rel="noopener">링크 열기</a>
+        <div class="muted sumLine">총액: <span class="vendorTotal">0</span></div>
+      </div>
+
+      <div class="preview mt-sm hidden">
+        <img class="previewImg" alt="preview" />
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
