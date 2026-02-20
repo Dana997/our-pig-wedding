@@ -414,3 +414,17 @@ body{ background: var(--bg2) !important; }
     grid-row:auto;
   }
 }
+
+.layout{display:flex; min-height:100vh;}
+.sidebar{
+  width:260px;
+  padding:16px;
+  border-right:1px solid var(--line);
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow:auto;
+  background: rgba(246,247,249,.92);
+  backdrop-filter: blur(10px);
+}
+.container{flex:1; padding:16px;}
