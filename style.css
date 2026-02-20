@@ -1,0 +1,28 @@
+/* 달력 */
+.calendar{
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap:8px;
+}
+.cal-head{
+  text-align:center;
+  color: var(--muted);
+  font-size:12px;
+}
+.cal-cell{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px;
+  min-height:74px;
+  background: rgba(255,255,255,.02);
+}
+.cal-date{font-size:12px; color:var(--muted)}
+.cal-dots{margin-top:8px; display:flex; flex-wrap:wrap; gap:6px}
+.dot{
+  width:8px; height:8px; border-radius:999px;
+  background: rgba(124,92,255,.7);
+  box-shadow: 0 0 0 2px rgba(124,92,255,.12);
+}
+.dot.secondary{background: rgba(255,77,109,.7); box-shadow: 0 0 0 2px rgba(255,77,109,.12);}
+.cal-cell.today{outline: 2px solid rgba(124,92,255,.55)}
+.cal-cell.mutedCell{opacity:.45}
