@@ -1,3 +1,8 @@
+// app.js — Our Pig Wedding v1 (localStorage)
+// - Summary + Categories + Vendors + Costs + Dates (upcoming + calendar)
+// - Export/Import JSON
+// - Tabs use event delegation (fixes "category tabs not clickable" issues)
+
 const CATEGORIES = [
   { id: "hall", name: "웨딩홀" },
   { id: "sde", name: "스드메+예복" },
@@ -6,97 +11,111 @@ const CATEGORIES = [
   { id: "home", name: "우리집" },
 ];
 
-const STORAGE_KEY = "our_wedding_site_v1";
+const STORAGE_KEY = "our_pig_wedding_v1";
 
-function money(n){
+function uid() {
+  return (
+    Math.random().toString(36).slice(2, 10) +
+    Date.now().toString(36).slice(2, 7)
+  );
+}
+
+function money(n) {
   const v = Number(n || 0);
   if (!isFinite(v)) return "0";
   return v.toLocaleString("ko-KR");
 }
-function parseMoney(s){
+
+function parseMoney(s) {
   if (typeof s !== "string") s = String(s ?? "");
   const cleaned = s.replace(/[^\d]/g, "");
   return cleaned ? Number(cleaned) : 0;
 }
-function uid(){
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(2, 7);
-}
-function todayYMD(){
+
+function todayYMD() {
   const d = new Date();
   const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
-function ymdToDate(ymd){
-  if(!ymd) return null;
-  const [y,m,d] = ymd.split("-").map(Number);
-  if(!y||!m||!d) return null;
-  return new Date(y, m-1, d);
+
+function ymdToDate(ymd) {
+  if (!ymd) return null;
+  const [y, m, d] = ymd.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
 }
 
-function defaultState(){
-  const state = {
+function defaultState() {
+  const s = {
     meta: { title: "우리 결혼 준비 아지트" },
     summaryMemo: "",
-    categories: {}
+    categories: {},
   };
-  for (const c of CATEGORIES){
-    state.categories[c.id] = { finalVendorId: null, vendors: [] };
+  for (const c of CATEGORIES) {
+    s.categories[c.id] = { finalVendorId: null, vendors: [] };
   }
-  return state;
+  return s;
 }
 
-function loadState(){
-  try{
+function normalizeVendor(v) {
+  return {
+    id: v?.id || uid(),
+    name: v?.name || "",
+    link: v?.link || "",
+    photo: v?.photo || "",
+    memo: v?.memo || "",
+    date: v?.date || "",
+    dateTitle: v?.dateTitle || "",
+    budget: Number(v?.budget || 0),
+    deposit: Number(v?.deposit || 0),
+    balance: Number(v?.balance || 0),
+  };
+}
+
+function loadState() {
+  try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
-    if (!parsed.categories) return defaultState();
-    for (const c of CATEGORIES){
-      if (!parsed.categories[c.id]){
-        parsed.categories[c.id] = { finalVendorId: null, vendors: [] };
-      }
-      // 필드 보정
-      parsed.categories[c.id].vendors = (parsed.categories[c.id].vendors || []).map(v => ({
-        id: v.id || uid(),
-        name: v.name || "",
-        link: v.link || "",
-        photo: v.photo || "",
-        memo: v.memo || "",
-        date: v.date || "",           // ✅ 날짜
-        dateTitle: v.dateTitle || "", // ✅ 일정 제목
-        budget: Number(v.budget || 0),
-        deposit: Number(v.deposit || 0),
-        balance: Number(v.balance || 0),
-      }));
-      if (parsed.categories[c.id].finalVendorId === undefined) parsed.categories[c.id].finalVendorId = null;
+    const base = defaultState();
+
+    base.meta.title = parsed?.meta?.title || base.meta.title;
+    base.summaryMemo = typeof parsed?.summaryMemo === "string" ? parsed.summaryMemo : "";
+
+    for (const c of CATEGORIES) {
+      const srcCat = parsed?.categories?.[c.id];
+      if (!srcCat) continue;
+
+      base.categories[c.id].finalVendorId = srcCat.finalVendorId || null;
+      base.categories[c.id].vendors = (srcCat.vendors || []).map(normalizeVendor);
     }
-    if (typeof parsed.summaryMemo !== "string") parsed.summaryMemo = "";
-    if (!parsed.meta) parsed.meta = { title: "우리 결혼 준비 아지트" };
-    return parsed;
-  }catch{
+    return base;
+  } catch {
     return defaultState();
   }
 }
-function saveState(){
+
+function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-let state = loadState();
-
-const $tabs = document.getElementById("tabs");
+// ---- DOM ----
+const $tabs = document.getElementById("tabs") || document.querySelector("nav.tabs");
 const $viewSummary = document.getElementById("view-summary");
 const $viewCategory = document.getElementById("view-category");
+
+const $siteTitle = document.getElementById("siteTitle");
 const $catTitle = document.getElementById("catTitle");
 const $vendorList = document.getElementById("vendorList");
 const $btnAddVendor = document.getElementById("btnAddVendor");
-const $siteTitle = document.getElementById("siteTitle");
 
 const $kpiBudget = document.getElementById("kpiBudget");
 const $kpiDeposit = document.getElementById("kpiDeposit");
 const $kpiBalance = document.getElementById("kpiBalance");
 const $kpiTotal = document.getElementById("kpiTotal");
+
 const $finalList = document.getElementById("finalList");
 const $upcomingList = document.getElementById("upcomingList");
 
@@ -113,56 +132,77 @@ const $calendar = document.getElementById("calendar");
 
 const vendorTpl = document.getElementById("vendorCardTpl");
 
+// ---- State ----
+let state = loadState();
 let active = { view: "summary", catId: null };
-let calCursor = new Date(); // 달력 월 이동용 (현재 월 기준)
+let calCursor = new Date(); // month cursor for calendar
 
-function setActiveView(view, catId=null){
+function getCategory(catId) {
+  return state.categories[catId];
+}
+
+// ---- Tabs (Event Delegation) ----
+function buildTabs() {
+  if (!$tabs) return;
+
+  $tabs.innerHTML = "";
+
+  const makeBtn = (text, dataset) => {
+    const b = document.createElement("button");
+    b.className = "tab";
+    b.type = "button"; // prevents weird submit behaviors
+    b.textContent = text;
+    Object.assign(b.dataset, dataset);
+    return b;
+  };
+
+  $tabs.appendChild(makeBtn("Summary", { view: "summary" }));
+
+  for (const c of CATEGORIES) {
+    $tabs.appendChild(makeBtn(c.name, { view: "category", catId: c.id }));
+  }
+
+  // One click handler for all tabs
+  $tabs.onclick = (e) => {
+    const btn = e.target.closest("button.tab");
+    if (!btn) return;
+
+    const view = btn.dataset.view;
+    const catId = btn.dataset.catId || null;
+
+    if (view === "summary") setActiveView("summary");
+    else setActiveView("category", catId);
+  };
+}
+
+function setActiveView(view, catId = null) {
   active = { view, catId };
-  $viewSummary.classList.toggle("active", view === "summary");
-  $viewCategory.classList.toggle("active", view === "category");
 
-  [...$tabs.querySelectorAll(".tab")].forEach(btn=>{
-    const isSummary = btn.dataset.view === "summary";
-    const isCat = btn.dataset.catId && btn.dataset.catId === catId;
-    btn.classList.toggle("active", (view==="summary" && isSummary) || (view==="category" && isCat));
-  });
+  if ($viewSummary) $viewSummary.classList.toggle("active", view === "summary");
+  if ($viewCategory) $viewCategory.classList.toggle("active", view === "category");
+
+  // Highlight active tab
+  if ($tabs) {
+    [...$tabs.querySelectorAll(".tab")].forEach((btn) => {
+      const isSummary = btn.dataset.view === "summary";
+      const isCat = btn.dataset.view === "category" && btn.dataset.catId === catId;
+      btn.classList.toggle("active", (view === "summary" && isSummary) || (view === "category" && isCat));
+    });
+  }
 
   render();
 }
 
-function buildTabs(){
-  $tabs.innerHTML = "";
+// ---- Computations ----
+function computeTotalsFromFinals() {
+  let budget = 0, deposit = 0, balance = 0, total = 0;
 
-  const summaryBtn = document.createElement("button");
-  summaryBtn.className = "tab";
-  summaryBtn.textContent = "Summary";
-  summaryBtn.dataset.view = "summary";
-  summaryBtn.onclick = ()=> setActiveView("summary");
-  $tabs.appendChild(summaryBtn);
-
-  for (const c of CATEGORIES){
-    const b = document.createElement("button");
-    b.className = "tab";
-    b.textContent = c.name;
-    b.dataset.catId = c.id;
-    b.onclick = ()=> setActiveView("category", c.id);
-    $tabs.appendChild(b);
-  }
-}
-
-function getCategory(catId){
-  return state.categories[catId];
-}
-
-function computeTotalsFromFinals(){
-  // 최종 업체만 비용 합산 (원하면 전체 후보 합계로 바꿀 수도 있음)
-  let budget=0, deposit=0, balance=0, total=0;
-
-  for (const c of CATEGORIES){
+  for (const c of CATEGORIES) {
     const cat = getCategory(c.id);
     const finalId = cat.finalVendorId;
     if (!finalId) continue;
-    const v = cat.vendors.find(x => x.id === finalId);
+
+    const v = cat.vendors.find((x) => x.id === finalId);
     if (!v) continue;
 
     budget += Number(v.budget || 0);
@@ -174,13 +214,53 @@ function computeTotalsFromFinals(){
   return { budget, deposit, balance, total };
 }
 
-function buildFinalList(){
+function collectAllEvents() {
+  const events = [];
+
+  for (const c of CATEGORIES) {
+    const cat = getCategory(c.id);
+    for (const v of cat.vendors) {
+      if (!v.date) continue;
+      events.push({
+        catId: c.id,
+        catName: c.name,
+        vendorId: v.id,
+        vendorName: v.name || "(이름 없음)",
+        date: v.date,
+        dateTitle: v.dateTitle || "",
+        isFinal: cat.finalVendorId === v.id,
+      });
+    }
+  }
+
+  events.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return events;
+}
+
+// ---- Summary Rendering ----
+function renderSummary() {
+  if ($siteTitle) $siteTitle.textContent = state.meta.title || "우리 결혼 준비 아지트";
+  if ($summaryMemo) $summaryMemo.value = state.summaryMemo || "";
+
+  const t = computeTotalsFromFinals();
+  if ($kpiBudget) $kpiBudget.textContent = money(t.budget);
+  if ($kpiDeposit) $kpiDeposit.textContent = money(t.deposit);
+  if ($kpiBalance) $kpiBalance.textContent = money(t.balance);
+  if ($kpiTotal) $kpiTotal.textContent = money(t.total);
+
+  buildFinalList();
+  buildUpcomingList();
+  renderCalendar();
+}
+
+function buildFinalList() {
+  if (!$finalList) return;
   $finalList.innerHTML = "";
 
-  for (const c of CATEGORIES){
+  for (const c of CATEGORIES) {
     const cat = getCategory(c.id);
     const finalId = cat.finalVendorId;
-    const v = finalId ? cat.vendors.find(x => x.id === finalId) : null;
+    const v = finalId ? cat.vendors.find((x) => x.id === finalId) : null;
 
     const div = document.createElement("div");
     div.className = "final-item";
@@ -198,74 +278,58 @@ function buildFinalList(){
   }
 }
 
-function collectAllEvents(){
-  // 날짜가 있는 항목들을 이벤트로 수집
-  const events = [];
-  for (const c of CATEGORIES){
-    const cat = getCategory(c.id);
-    for (const v of cat.vendors){
-      if (!v.date) continue;
-      events.push({
-        catId: c.id,
-        catName: c.name,
-        vendorId: v.id,
-        vendorName: v.name || "(이름 없음)",
-        date: v.date,
-        dateTitle: v.dateTitle || "",
-        isFinal: cat.finalVendorId === v.id
-      });
-    }
-  }
-  // 날짜순 정렬
-  events.sort((a,b)=> (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  return events;
-}
-
-function buildUpcomingList(){
+function buildUpcomingList() {
+  if (!$upcomingList) return;
   $upcomingList.innerHTML = "";
 
   const now = ymdToDate(todayYMD());
   const events = collectAllEvents()
-    .filter(e => ymdToDate(e.date) && ymdToDate(e.date) >= now)
+    .filter((e) => ymdToDate(e.date) && ymdToDate(e.date) >= now)
     .slice(0, 8);
 
-  if (events.length === 0){
+  if (events.length === 0) {
     const div = document.createElement("div");
     div.className = "final-item";
-    div.innerHTML = `<div><strong>등록된 일정이 없어요</strong><small>각 메뉴에서 날짜를 넣으면 여기랑 달력에 표시돼요.</small></div>`;
+    div.innerHTML = `
+      <div>
+        <strong>등록된 일정이 없어요</strong>
+        <small>각 메뉴에서 날짜를 넣으면 여기랑 달력에 표시돼요.</small>
+      </div>
+    `;
     $upcomingList.appendChild(div);
     return;
   }
 
-  for (const e of events){
+  for (const e of events) {
     const div = document.createElement("div");
     div.className = "final-item";
     const badge = e.isFinal ? " · 최종" : "";
-    const title = e.dateTitle ? ` - ${e.dateTitle}` : "";
+    const title = e.dateTitle ? ` - ${escapeHtml(e.dateTitle)}` : "";
     div.innerHTML = `
       <div>
         <strong>${e.date}${badge}</strong>
-        <small>${e.catName} · ${e.vendorName}${title}</small>
+        <small>${e.catName} · ${escapeHtml(e.vendorName)}${title}</small>
       </div>
       <div style="text-align:right">
-        <button class="btn ghost" data-go="${e.catId}">열기</button>
+        <button class="btn ghost" type="button">열기</button>
       </div>
     `;
-    div.querySelector("button").onclick = ()=> setActiveView("category", e.catId);
+    div.querySelector("button").onclick = () => setActiveView("category", e.catId);
     $upcomingList.appendChild(div);
   }
 }
 
-function renderCalendar(){
-  // 월간 달력(간단)
+function renderCalendar() {
+  if (!$calendar || !$calLabel) return;
+
   const year = calCursor.getFullYear();
   const month = calCursor.getMonth(); // 0-11
-  $calLabel.textContent = `${year}년 ${month+1}월`;
+  $calLabel.textContent = `${year}년 ${month + 1}월`;
 
   $calendar.innerHTML = "";
 
-  const heads = ["일","월","화","수","목","금","토"];
-  for (const h of heads){
+  const heads = ["일", "월", "화", "수", "목", "금", "토"];
+  for (const h of heads) {
     const hd = document.createElement("div");
     hd.className = "cal-head";
     hd.textContent = h;
@@ -273,22 +337,22 @@ function renderCalendar(){
   }
 
   const first = new Date(year, month, 1);
-  const last = new Date(year, month+1, 0);
-  const startDay = first.getDay(); // 0 Sunday
+  const last = new Date(year, month + 1, 0);
+  const startDay = first.getDay();
   const totalDays = last.getDate();
 
   const events = collectAllEvents();
-  const eventMap = new Map(); // ymd -> count + isFinal flag
-  for (const e of events){
+  const eventMap = new Map(); // ymd -> {count, finalCount}
+  for (const e of events) {
     if (!e.date) continue;
-    if (!eventMap.has(e.date)) eventMap.set(e.date, { count:0, finalCount:0 });
+    if (!eventMap.has(e.date)) eventMap.set(e.date, { count: 0, finalCount: 0 });
     const obj = eventMap.get(e.date);
     obj.count += 1;
     if (e.isFinal) obj.finalCount += 1;
   }
 
-  // 이전달 꼬리(빈칸)
-  for (let i=0; i<startDay; i++){
+  // leading blanks
+  for (let i = 0; i < startDay; i++) {
     const cell = document.createElement("div");
     cell.className = "cal-cell mutedCell";
     cell.innerHTML = `<div class="cal-date"></div>`;
@@ -297,11 +361,10 @@ function renderCalendar(){
 
   const today = todayYMD();
 
-  for (let day=1; day<=totalDays; day++){
-    const y = year;
-    const m = String(month+1).padStart(2,"0");
-    const d = String(day).padStart(2,"0");
-    const ymd = `${y}-${m}-${d}`;
+  for (let day = 1; day <= totalDays; day++) {
+    const m = String(month + 1).padStart(2, "0");
+    const d = String(day).padStart(2, "0");
+    const ymd = `${year}-${m}-${d}`;
 
     const cell = document.createElement("div");
     cell.className = "cal-cell";
@@ -309,11 +372,10 @@ function renderCalendar(){
 
     const meta = eventMap.get(ymd);
     const dots = [];
-    if (meta){
-      // 최종 일정(secondary dot) / 일반 일정(dot)
+    if (meta) {
       const normal = Math.max(0, meta.count - meta.finalCount);
-      for(let i=0;i<Math.min(3, normal);i++) dots.push(`<span class="dot"></span>`);
-      for(let i=0;i<Math.min(2, meta.finalCount);i++) dots.push(`<span class="dot secondary"></span>`);
+      for (let i = 0; i < Math.min(3, normal); i++) dots.push(`<span class="dot"></span>`);
+      for (let i = 0; i < Math.min(2, meta.finalCount); i++) dots.push(`<span class="dot secondary"></span>`);
     }
 
     cell.innerHTML = `
@@ -325,16 +387,17 @@ function renderCalendar(){
   }
 }
 
-function renderCategory(catId){
-  const catMeta = CATEGORIES.find(x=>x.id===catId);
+// ---- Category Rendering ----
+function renderCategory(catId) {
+  const meta = CATEGORIES.find((x) => x.id === catId);
   const cat = getCategory(catId);
-  $catTitle.textContent = catMeta ? catMeta.name : "카테고리";
-  $vendorList.innerHTML = "";
+  if ($catTitle) $catTitle.textContent = meta ? meta.name : "카테고리";
+  if (!$vendorList) return;
 
-  // 라디오 name을 카테고리별로 분리(동시에 여러 카테고리 보기 방지 안전장치)
+  $vendorList.innerHTML = "";
   const radioName = `finalPick_${catId}`;
 
-  for (const v of cat.vendors){
+  for (const v of cat.vendors) {
     const node = vendorTpl.content.firstElementChild.cloneNode(true);
 
     const $radio = node.querySelector(".radioFinal");
@@ -350,8 +413,8 @@ function renderCategory(catId){
     const $deposit = node.querySelector(".vendorDeposit");
     const $balance = node.querySelector(".vendorBalance");
     const $total = node.querySelector(".vendorTotal");
-    const $linkOpen = node.querySelector(".linkOpen");
 
+    const $linkOpen = node.querySelector(".linkOpen");
     const $preview = node.querySelector(".preview");
     const $previewImg = node.querySelector(".previewImg");
 
@@ -370,186 +433,189 @@ function renderCategory(catId){
     $deposit.value = v.deposit ? String(v.deposit) : "";
     $balance.value = v.balance ? String(v.balance) : "";
 
-    const refreshTotals = ()=>{
-      const b = parseMoney($budget.value);
-      const d = parseMoney($deposit.value);
-      const bal = parseMoney($balance.value);
-      $total.textContent = money(d + bal);
+    const refreshTotals = () => {
+      v.budget = parseMoney($budget.value);
+      v.deposit = parseMoney($deposit.value);
+      v.balance = parseMoney($balance.value);
 
-      // state update
-      v.budget = b; v.deposit = d; v.balance = bal;
+      $total.textContent = money(v.deposit + v.balance);
       saveState();
-      if (active.view==="summary") renderSummary();
-      else renderSummary(); // summary KPI도 갱신
+
+      // Keep Summary up to date
+      renderSummary();
     };
 
-    const refreshLink = ()=>{
+    const refreshLink = () => {
       const url = ($link.value || "").trim();
-      if (url){
+      if (url) {
         $linkOpen.href = url;
         $linkOpen.style.pointerEvents = "auto";
         $linkOpen.style.opacity = "1";
-      }else{
+      } else {
         $linkOpen.href = "javascript:void(0)";
         $linkOpen.style.pointerEvents = "none";
         $linkOpen.style.opacity = ".55";
       }
     };
 
-    const refreshPhoto = ()=>{
+    const refreshPhoto = () => {
       const url = ($photo.value || "").trim();
-      if (url){
+      if (url) {
         $preview.classList.remove("hidden");
         $previewImg.src = url;
-      }else{
+      } else {
         $preview.classList.add("hidden");
         $previewImg.removeAttribute("src");
       }
     };
 
-    $radio.onchange = ()=>{
+    // Events
+    $radio.onchange = () => {
       cat.finalVendorId = v.id;
       saveState();
-      render(); // badge 표시/summary 반영
+      render(); // refresh badge + summary
     };
 
-    $name.oninput = ()=>{ v.name = $name.value; saveState(); renderSummary(); };
-    $link.oninput = ()=>{ v.link = $link.value; saveState(); refreshLink(); };
-    $photo.oninput = ()=>{ v.photo = $photo.value; saveState(); refreshPhoto(); };
-    $memo.oninput = ()=>{ v.memo = $memo.value; saveState(); };
+    $name.oninput = () => { v.name = $name.value; saveState(); renderSummary(); };
+    $link.oninput = () => { v.link = $link.value; saveState(); refreshLink(); };
+    $photo.oninput = () => { v.photo = $photo.value; saveState(); refreshPhoto(); };
+    $memo.oninput = () => { v.memo = $memo.value; saveState(); };
 
-    $date.oninput = ()=>{ v.date = $date.value; saveState(); renderSummary(); };
-    $dateTitle.oninput = ()=>{ v.dateTitle = $dateTitle.value; saveState(); renderSummary(); };
+    $date.oninput = () => { v.date = $date.value; saveState(); renderSummary(); };
+    $dateTitle.oninput = () => { v.dateTitle = $dateTitle.value; saveState(); renderSummary(); };
 
     $budget.oninput = refreshTotals;
     $deposit.oninput = refreshTotals;
     $balance.oninput = refreshTotals;
 
-    refreshTotals();
-    refreshLink();
-    refreshPhoto();
-
-    node.querySelector(".btnDel").onclick = ()=>{
-      // 삭제 시 최종 선택도 정리
-      cat.vendors = cat.vendors.filter(x => x.id !== v.id);
+    node.querySelector(".btnDel").onclick = () => {
+      cat.vendors = cat.vendors.filter((x) => x.id !== v.id);
       if (cat.finalVendorId === v.id) cat.finalVendorId = null;
       saveState();
       render();
     };
 
+    refreshTotals();
+    refreshLink();
+    refreshPhoto();
+
     $vendorList.appendChild(node);
   }
 }
 
-function renderSummary(){
-  $siteTitle.textContent = state.meta.title || "우리 결혼 준비 아지트";
-  $summaryMemo.value = state.summaryMemo || "";
-
-  const t = computeTotalsFromFinals();
-  $kpiBudget.textContent = money(t.budget);
-  $kpiDeposit.textContent = money(t.deposit);
-  $kpiBalance.textContent = money(t.balance);
-  $kpiTotal.textContent = money(t.total);
-
-  buildFinalList();
-  buildUpcomingList();
-  renderCalendar();
-}
-
-function render(){
+// ---- Render Router ----
+function render() {
   if (active.view === "summary") renderSummary();
   if (active.view === "category" && active.catId) renderCategory(active.catId);
 }
 
-// 버튼/이벤트
-$btnAddVendor.onclick = ()=>{
-  if (!active.catId) return;
-  const cat = getCategory(active.catId);
-  cat.vendors.unshift({
-    id: uid(),
-    name: "",
-    link: "",
-    photo: "",
-    memo: "",
-    date: "",
-    dateTitle: "",
-    budget: 0,
-    deposit: 0,
-    balance: 0,
-  });
-  saveState();
-  render();
-};
+// ---- Controls ----
+if ($btnAddVendor) {
+  $btnAddVendor.onclick = () => {
+    if (!active.catId) return;
 
-$btnSaveSummaryMemo.onclick = ()=>{
-  state.summaryMemo = $summaryMemo.value || "";
-  saveState();
-};
+    const cat = getCategory(active.catId);
+    // Add to TOP so it doesn't feel like it's "at the bottom"
+    cat.vendors.unshift(
+      normalizeVendor({
+        id: uid(),
+        name: "",
+        link: "",
+        photo: "",
+        memo: "",
+        date: "",
+        dateTitle: "",
+        budget: 0,
+        deposit: 0,
+        balance: 0,
+      })
+    );
 
-$btnExport.onclick = ()=>{
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "our-wedding-data.json";
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
-
-$importFile.onchange = async ()=>{
-  const file = $importFile.files?.[0];
-  if (!file) return;
-  const text = await file.text();
-  try{
-    const imported = JSON.parse(text);
-    state = imported;
-    // 보정 후 저장
-    state = loadStateFromImported(state);
     saveState();
     render();
-    alert("가져오기 완료!");
-  }catch{
-    alert("JSON 파일이 올바르지 않아요.");
-  }finally{
-    $importFile.value = "";
-  }
-};
 
-function loadStateFromImported(imported){
-  // 안전하게 defaultState 기반으로 덮어쓰기
-  const base = defaultState();
-  base.meta.title = imported?.meta?.title || base.meta.title;
-  base.summaryMemo = imported?.summaryMemo || "";
-
-  for (const c of CATEGORIES){
-    const srcCat = imported?.categories?.[c.id];
-    if (!srcCat) continue;
-    base.categories[c.id].finalVendorId = srcCat.finalVendorId || null;
-    base.categories[c.id].vendors = (srcCat.vendors || []).map(v => ({
-      id: v.id || uid(),
-      name: v.name || "",
-      link: v.link || "",
-      photo: v.photo || "",
-      memo: v.memo || "",
-      date: v.date || "",
-      dateTitle: v.dateTitle || "",
-      budget: Number(v.budget || 0),
-      deposit: Number(v.deposit || 0),
-      balance: Number(v.balance || 0),
-    }));
-  }
-  return base;
+    // Scroll to top so user sees the new card right away
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 }
 
-// 달력 이동
-$calPrev.onclick = ()=>{
-  calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()-1, 1);
-  renderSummary();
-};
-$calNext.onclick = ()=>{
-  calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth()+1, 1);
-  renderSummary();
-};
+if ($btnSaveSummaryMemo) {
+  $btnSaveSummaryMemo.onclick = () => {
+    state.summaryMemo = $summaryMemo?.value || "";
+    saveState();
+  };
+}
 
-// 초기화
+if ($btnExport) {
+  $btnExport.onclick = () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "our-pig-wedding-data.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+}
+
+if ($importFile) {
+  $importFile.onchange = async () => {
+    const file = $importFile.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+
+      // Build safe state
+      const base = defaultState();
+      base.meta.title = imported?.meta?.title || base.meta.title;
+      base.summaryMemo = imported?.summaryMemo || "";
+
+      for (const c of CATEGORIES) {
+        const srcCat = imported?.categories?.[c.id];
+        if (!srcCat) continue;
+
+        base.categories[c.id].finalVendorId = srcCat.finalVendorId || null;
+        base.categories[c.id].vendors = (srcCat.vendors || []).map(normalizeVendor);
+      }
+
+      state = base;
+      saveState();
+      render();
+      alert("가져오기 완료!");
+    } catch {
+      alert("JSON 파일이 올바르지 않아요.");
+    } finally {
+      $importFile.value = "";
+    }
+  };
+}
+
+// Calendar nav
+if ($calPrev) {
+  $calPrev.onclick = () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1);
+    renderSummary();
+  };
+}
+if ($calNext) {
+  $calNext.onclick = () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1);
+    renderSummary();
+  };
+}
+
+// ---- Helpers ----
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// ---- Init ----
 buildTabs();
 setActiveView("summary");
+render();
