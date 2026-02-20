@@ -1,83 +1,328 @@
-/* 달력 */
+/* ===== Minimal Spreadsheet Theme (soft gray, low saturation) ===== */
+
+:root{
+  --bg:#f6f7f9;
+  --panel:#ffffff;
+  --line:#dfe3e8;
+  --line2:#eef1f4;
+  --text:#1f2328;
+  --muted:#6b7280;
+
+  --accent:#4b5563;     /* 쨍하지 않은 회색 포인트 */
+  --accent2:#111827;    /* 진한 글자 */
+  --ok:#0f766e;         /* 아주 은은한 초록 (최종 뱃지 등) */
+  --warn:#92400e;
+
+  --radius:10px;
+  --shadow:0 1px 2px rgba(16,24,40,.06);
+  --shadow2:0 2px 10px rgba(16,24,40,.08);
+
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:var(--font);
+  color:var(--text);
+  background:var(--bg);
+}
+
+/* ===== Layout ===== */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(246,247,249,.92);
+  backdrop-filter: blur(10px);
+  border-bottom:1px solid var(--line);
+}
+
+.topbar .brand{
+  padding:14px 16px 10px;
+}
+.brand h1{
+  margin:0;
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:-.2px;
+}
+.brand .sub{
+  margin:6px 0 0;
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* Tabs */
+.tabs{
+  display:flex;
+  gap:8px;
+  padding:0 16px 12px;
+  flex-wrap:wrap;
+}
+.tab{
+  appearance:none;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--accent2);
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:13px;
+  line-height:1;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+  transition: transform .06s ease, background .12s ease;
+}
+.tab:hover{ transform: translateY(-1px); }
+.tab.active{
+  border-color:var(--accent);
+  box-shadow:var(--shadow2);
+}
+
+/* Container / Views */
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  padding:16px;
+}
+.view{ display:none !important; }
+.view.active{ display:block !important; }
+
+/* ===== Cards / Sections ===== */
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:14px;
+}
+.card + .card{ margin-top:12px; }
+
+.card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.card-head h2, .card-head h3{
+  margin:0;
+  font-size:14px;
+}
+.card-head small{
+  color:var(--muted);
+}
+
+.row{ display:flex; gap:10px; flex-wrap:wrap; }
+.row.between{ justify-content:space-between; align-items:center; }
+.row.center{ align-items:center; }
+
+/* ===== Buttons ===== */
+.btn{
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--text);
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+  box-shadow:var(--shadow);
+}
+.btn:hover{ box-shadow:var(--shadow2); }
+.btn.primary{
+  border-color:var(--accent);
+}
+.btn.ghost{
+  background:transparent;
+  box-shadow:none;
+}
+.btn.danger{
+  border-color:#f1c6c6;
+  color:#7f1d1d;
+}
+
+/* ===== Inputs ===== */
+input[type="text"], input[type="url"], input[type="date"], textarea{
+  width:100%;
+  border:1px solid var(--line);
+  background:var(--panel);
+  border-radius:8px;
+  padding:9px 10px;
+  font-size:13px;
+  color:var(--text);
+  outline:none;
+}
+textarea{ min-height:90px; resize:vertical; }
+input:focus, textarea:focus{
+  border-color:#c3cad2;
+  box-shadow:0 0 0 3px rgba(31,35,40,.06);
+}
+
+label{
+  font-size:12px;
+  color:var(--muted);
+  display:block;
+  margin-bottom:6px;
+}
+
+/* ===== KPI (Summary) ===== */
+.kpis{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:10px;
+}
+.kpi{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:12px;
+  box-shadow:var(--shadow);
+}
+.kpi .label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.kpi .value{
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:-.2px;
+}
+
+@media (max-width: 900px){
+  .kpis{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ===== Lists (final/upcoming) ===== */
+.final-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid var(--line2);
+  border-radius:10px;
+  background:#fbfcfd;
+}
+.final-item strong{ font-size:13px; }
+.final-item small{ display:block; color:var(--muted); margin-top:4px; }
+
+/* ===== Vendor Card ===== */
+.vendor-card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:var(--shadow);
+  padding:12px;
+}
+.vendor-card + .vendor-card{ margin-top:12px; }
+
+.vendor-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.vendor-top .left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:11px;         /* ✅ 이모티콘/뱃지 작게 */
+  border:1px solid #cfe7e3;
+  background:#f2fbf9;
+  color:var(--ok);
+}
+.badge .emoji{ font-size:12px; } /* 혹시 이모지 span이 있으면 작게 */
+
+.grid2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.grid3{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:10px;
+}
+@media (max-width: 900px){
+  .grid2, .grid3{ grid-template-columns: 1fr; }
+}
+
+/* Preview image */
+.preview{
+  margin-top:8px;
+  border:1px solid var(--line2);
+  border-radius:10px;
+  overflow:hidden;
+  background:#fbfcfd;
+}
+.preview.hidden{ display:none; }
+.preview img{
+  display:block;
+  width:100%;
+  height:auto;
+}
+
+/* ===== Calendar ===== */
 .calendar{
   display:grid;
   grid-template-columns: repeat(7, 1fr);
-  gap:8px;
+  gap:6px;
+  margin-top:10px;
 }
 .cal-head{
-  text-align:center;
-  color: var(--muted);
   font-size:12px;
+  color:var(--muted);
+  text-align:center;
+  padding:6px 0;
 }
 .cal-cell{
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:10px;
-  min-height:74px;
-  background: rgba(255,255,255,.02);
+  border:1px solid var(--line2);
+  border-radius:10px;
+  background:#fbfcfd;
+  min-height:64px;
+  padding:8px;
 }
-.cal-date{font-size:12px; color:var(--muted)}
-.cal-dots{margin-top:8px; display:flex; flex-wrap:wrap; gap:6px}
+.cal-cell.today{
+  border-color:#cbd5e1;
+  box-shadow:0 0 0 3px rgba(148,163,184,.18);
+}
+.cal-date{
+  font-size:12px;
+  color:var(--muted);
+}
+.cal-dots{
+  margin-top:8px;
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+}
 .dot{
-  width:8px; height:8px; border-radius:999px;
-  background: rgba(124,92,255,.7);
-  box-shadow: 0 0 0 2px rgba(124,92,255,.12);
+  width:6px;height:6px;border-radius:99px;
+  background:#9aa4b2; /* 연한 회색 */
 }
-.dot.secondary{background: rgba(255,77,109,.7); box-shadow: 0 0 0 2px rgba(255,77,109,.12);}
-.cal-cell.today{outline: 2px solid rgba(124,92,255,.55)}
-.cal-cell.mutedCell{opacity:.45}
-.layout{display:flex; min-height:100vh;}
-.sidebar{
-  position:sticky; top:0; align-self:flex-start;
-  width:260px; padding:16px;
-  border-right:1px solid var(--line);
-  background: rgba(11,12,16,.85);
-  backdrop-filter: blur(10px);
-}
-.tabs.vertical{flex-direction:column; align-items:stretch; margin-top:14px;}
-.tabs.vertical .tab{border-radius:12px; text-align:left;}
-.container{flex:1; padding:16px;}
+.dot.secondary{ background:#7aa6a0; } /* 은은한 녹청 */
 
-@media (max-width:768px){
-  .layout{flex-direction:column;}
-  .sidebar{width:auto; position:static; border-right:none; border-bottom:1px solid var(--line);}
-  .tabs.vertical{flex-direction:row; flex-wrap:wrap;}
+.mutedCell{ opacity:.45; }
+
+/* ===== Footer ===== */
+.footer{
+  max-width:1100px;
+  margin:14px auto 28px;
+  padding:0 16px;
+  color:var(--muted);
+  font-size:12px;
 }
 
-/* --- CLICK FIX: 카테고리 탭이 안 눌릴 때(투명 레이어/겹침 방지) --- */
-.topbar{
-  position: sticky;
-  top: 0;
-  z-index: 9999;              /* 헤더를 최상단으로 */
-}
-
-.tabs{
-  position: relative;
-  z-index: 10000;             /* 탭 영역을 더 위로 */
-  pointer-events: auto;
-}
-
-.tab{
-  pointer-events: auto !important;
-}
-
-/* 혹시 상단 브랜드 영역이 탭 위로 덮는 경우 대비 */
-.brand{
-  pointer-events: none;
-}
-.brand *{
-  pointer-events: none;
-}
-
-/* 탭만은 클릭 가능하게 다시 살림 */
-#tabs, #tabs *{
-  pointer-events: auto !important;
-}
-
-/* ===== Single-view routing: active view만 보이게 ===== */
-.view { display: none !important; }
-.view.active { display: block !important; }
-
-/* 혹시 섹션에 class="view"가 없으면 대비용 (id 기반) */
-#view-summary, #view-category { display: none; }
-#view-summary.active, #view-category.active { display: block; }
+/* ===== Safety: 탭 클릭 보장 ===== */
+#tabs, #tabs *{ pointer-events:auto !important; }
