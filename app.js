@@ -615,7 +615,23 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
-// ---- Init ----
+function buildSideMenu(){
+  const el = document.getElementById("sideMenu");
+  if(!el) return;
+
+  el.innerHTML = "";
+
+  for(const c of CATEGORIES){
+    const b = document.createElement("button");
+    b.className = "btn";
+    b.type = "button";
+    b.textContent = c.name;
+    b.onclick = () => setActiveView("category", c.id);
+    el.appendChild(b);
+  }
+}
+
 buildTabs();
+buildSideMenu();
 setActiveView("summary");
 render();
