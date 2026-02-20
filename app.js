@@ -631,7 +631,7 @@ function buildSideMenu(){
   }
 }
 
-buildTabs();
+
 buildSideMenu();
 setActiveView("summary");
 render();
