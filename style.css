@@ -326,3 +326,91 @@ label{
 
 /* ===== Safety: 탭 클릭 보장 ===== */
 #tabs, #tabs *{ pointer-events:auto !important; }
+
+/* ===== Dashboard Layout like the sample ===== */
+:root{
+  --bg2:#f3f4f6;          /* 전체 배경(연회색) */
+  --cardTint:#f7f3f6;     /* 카드 아주 연한 톤 */
+  --ink:#1f2328;
+  --stroke:#cfd6de;       /* 테두리 */
+}
+
+body{ background: var(--bg2) !important; }
+
+/* Summary 대시보드 */
+.dashboard{
+  display:grid;
+  grid-template-columns: 220px 1fr 1fr; /* 왼쪽 메뉴 + 2열 */
+  grid-template-rows: auto auto auto;
+  gap:14px;
+  align-items:stretch;
+}
+
+/* 상단 큰 설명 박스 */
+.dash-hero{
+  grid-column: 2 / 4;
+}
+
+/* 왼쪽 카테고리 박스 */
+.dash-side{
+  grid-column: 1 / 2;
+  grid-row: 1 / 4;
+}
+
+/* 4개 카드 영역 */
+.dash-list{ grid-column: 2 / 3; grid-row: 2 / 3; }
+.dash-cal{  grid-column: 3 / 4; grid-row: 2 / 3; }
+.dash-cost{ grid-column: 2 / 3; grid-row: 3 / 4; }
+.dash-memo{ grid-column: 3 / 4; grid-row: 3 / 4; }
+
+/* 카드 공통 스타일(사진 같은 느낌) */
+.card{
+  background: var(--cardTint) !important;
+  border: 1px solid var(--stroke) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+
+.card-head h2, .card-head h3{
+  font-size:14px;
+  letter-spacing:.2px;
+}
+
+/* 카드 타이틀을 '라벨 스티커'처럼 */
+.card-head{
+  margin-bottom:8px;
+}
+.card-head h2, .card-head h3{
+  display:inline-block;
+  background:#ffffffcc;
+  border:1px solid var(--stroke);
+  padding:4px 10px;
+  border-radius:10px;
+  margin:0;
+}
+
+/* 왼쪽 메뉴 버튼을 블록처럼 */
+.side-menu{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.side-menu .btn{
+  width:100%;
+  text-align:left;
+  background:#ffffffaa;
+  border:1px solid var(--stroke);
+  box-shadow:none;
+}
+
+/* 모바일에서는 한 열로 */
+@media (max-width: 980px){
+  .dashboard{
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .dash-hero, .dash-side, .dash-list, .dash-cal, .dash-cost, .dash-memo{
+    grid-column:auto;
+    grid-row:auto;
+  }
+}
