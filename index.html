@@ -20,54 +20,70 @@
   <main class="container">
     <!-- SUMMARY -->
     <section id="view-summary" class="view active">
-      <div class="card">
-        <div class="card-head">
-          <h2>Summary</h2>
-          <div class="row gap">
-            <button class="btn" id="btnExport">내보내기(JSON)</button>
-            <label class="btn ghost">
-              가져오기(JSON)
-              <input id="importFile" type="file" accept="application/json" hidden />
-            </label>
-          </div>
-        </div>
+  <div class="dashboard">
 
-        <div class="grid2">
-          <div class="kpi"><div class="kpi-label">총 예산</div><div class="kpi-value" id="kpiBudget">0</div></div>
-          <div class="kpi"><div class="kpi-label">총 계약금</div><div class="kpi-value" id="kpiDeposit">0</div></div>
-          <div class="kpi"><div class="kpi-label">총 잔금</div><div class="kpi-value" id="kpiBalance">0</div></div>
-          <div class="kpi"><div class="kpi-label">총액(계약금+잔금)</div><div class="kpi-value" id="kpiTotal">0</div></div>
-        </div>
+    <!-- 좌측 메뉴 박스 -->
+    <div class="card dash-side">
+      <div class="card-head"><h3>카테고리</h3></div>
+      <div class="side-menu" id="sideMenu"></div>
+    </div>
 
-        <h3 class="mt">메뉴별 최종업체</h3>
-        <div id="finalList" class="final-list"></div>
-
-        <h3 class="mt">다가오는 일정</h3>
-        <div id="upcomingList" class="final-list"></div>
+    <!-- 상단 큰 설명 -->
+    <div class="card dash-hero">
+      <div class="card-head"><h3>MAIN DESCRIPTION</h3></div>
+      <div class="row">
+        <!-- 기존 summaryMemo(메모) 같은 거 있으면 여기 넣어도 되고,
+             그냥 안내 문구 넣어도 됨 -->
+        <p style="margin:0;color:var(--muted);font-size:13px;">
+          Summary에서 최종업체 비용 합산 & 일정이 자동으로 정리돼요.
+        </p>
       </div>
+    </div>
 
-      <div class="card mt">
-        <div class="row between">
-          <h3>달력</h3>
-          <div class="row gap">
-            <button class="btn ghost" id="calPrev">◀</button>
-            <div class="muted" id="calLabel"></div>
-            <button class="btn ghost" id="calNext">▶</button>
-          </div>
-        </div>
-        <div id="calendar" class="calendar mt-sm"></div>
-        <p class="muted mt-sm">※ 날짜가 있는 항목만 달력/다가오는 일정에 표시돼요.</p>
-      </div>
+    <!-- LIST -->
+    <div class="card dash-list">
+      <div class="card-head"><h3>LIST</h3></div>
+      <div id="finalList"></div>
+    </div>
 
-      <div class="card mt">
-        <h3>Summary 메모</h3>
-        <textarea id="summaryMemo" class="textarea" placeholder="요약 메모(예: 이번 주 웨딩홀 2군데 투어, 스드메 상담 예약…)"></textarea>
-        <div class="row end mt-sm">
-          <button class="btn" id="btnSaveSummaryMemo">저장</button>
+    <!-- CALENDER -->
+    <div class="card dash-cal">
+      <div class="card-head">
+        <h3>CALENDER</h3>
+        <div class="row">
+          <button class="btn ghost" id="calPrev" type="button">◀</button>
+          <strong id="calLabel" style="font-size:13px;"></strong>
+          <button class="btn ghost" id="calNext" type="button">▶</button>
         </div>
       </div>
-    </section>
+      <div class="calendar" id="calendar"></div>
+    </div>
 
+    <!-- COST -->
+    <div class="card dash-cost">
+      <div class="card-head"><h3>COST</h3></div>
+      <div class="kpis">
+        <div class="kpi"><div class="label">예산</div><div class="value" id="kpiBudget">0</div></div>
+        <div class="kpi"><div class="label">계약금</div><div class="value" id="kpiDeposit">0</div></div>
+        <div class="kpi"><div class="label">잔금</div><div class="value" id="kpiBalance">0</div></div>
+        <div class="kpi"><div class="label">최종합계</div><div class="value" id="kpiTotal">0</div></div>
+      </div>
+    </div>
+
+    <!-- REMARK -->
+    <div class="card dash-memo">
+      <div class="card-head"><h3>REMARK</h3></div>
+      <label style="margin-top:6px;">메모</label>
+      <textarea id="summaryMemo" placeholder="메모/해야할 일/체크리스트를 적어두세요"></textarea>
+      <div class="row" style="margin-top:10px;justify-content:flex-end;">
+        <button class="btn primary" id="btnSaveSummaryMemo" type="button">저장</button>
+        <button class="btn" id="btnExport" type="button">내보내기</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none" />
+      </div>
+    </div>
+
+  </div>
+</section>
     <!-- CATEGORY VIEW -->
     <section id="view-category" class="view">
       <div class="row between">
